@@ -1,0 +1,15 @@
+{
+  "required_fields": [
+    "kind",
+    "report_id",
+    "report_type",
+    "generated_at",
+    "agent_id",
+    "protocol_version",
+    "period",
+    "summary",
+    "metrics",
+    "events",
+    "recommended_actions"
+  ]
+}

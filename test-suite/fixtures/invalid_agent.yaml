@@ -1,0 +1,19 @@
+kind: AWCDeclaration
+api_version: 0.1.0
+metadata:
+  created_at: 2026-03-20T00:00:00Z
+  last_reviewed_at: 2026-03-20T00:00:00Z
+  organization: ExampleCo
+  owners:
+    - name: Test Owner
+      email: owner@example.com
+scope:
+  mission: This fixture is intentionally invalid because required protocol sections are missing.
+  allowed_tasks:
+    - summarize leads
+  prohibited_tasks:
+    - negotiate pricing
+  handoffs:
+    - trigger: uncertainty
+      action: request-human-review
+      target: manager

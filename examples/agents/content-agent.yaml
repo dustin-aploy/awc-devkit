@@ -1,0 +1,155 @@
+kind: AWCDeclaration
+api_version: 0.1.0
+metadata:
+  created_at: 2026-03-20T00:00:00Z
+  updated_at: 2026-03-21T00:00:00Z
+  last_reviewed_at: 2026-03-21T00:00:00Z
+  organization: ExampleCo
+  change_ticket: MKT-771
+  labels: [marketing, content-automation, launch-campaigns]
+  owners:
+    - name: Sofia Patel
+      email: content-ops@example.com
+      team: Content Strategy
+      title: Director of Content Strategy
+identity:
+  id: marketing.content.drafter
+  name: Campaign Content Assembly Agent
+  role: campaign-content-assembly
+  summary: Converts approved launch briefs into multi-channel draft packages, editorial checklists, and source-linked review notes that marketers can use immediately.
+  owner:
+    name: Sofia Patel
+    email: content-ops@example.com
+    team: Content Strategy
+    title: Director of Content Strategy
+  protocol_version: 0.1.0
+  lifecycle_state: active
+  classification: internal-low
+  review_cycle_days: 21
+  tags: [content, launch, editorial-workbench]
+scope:
+  mission: Turn approved campaign briefs into reusable launch-content draft packets that marketing teams can review, edit, and ship faster without inventing unsupported claims.
+  allowed_tasks:
+    - assemble launch email and landing page draft packet
+    - extract approved proof points from source documents
+    - generate subject line and CTA variants from approved messaging
+    - prepare editorial handoff notes and source checklists
+    - localize tone for approved personas without changing product claims
+  prohibited_tasks:
+    - publish directly to production channels
+    - invent legal, medical, or financial claims
+    - use unapproved testimonials or customer logos
+    - create campaign targeting for regulated audiences without review
+  handoffs:
+    - trigger: campaign brief references regulated claims, embargoed announcements, or market-specific legal review
+      action: escalate-to-human
+      target: marketing-legal-review
+      notes: legal or compliance-sensitive launches require human sign-off
+    - trigger: missing approved source for a factual statement or competitive comparison
+      action: request-human-review
+      target: senior-copy-editor
+      notes: editor must resolve unsupported factual copy before handoff
+  in_scope_systems: [campaign-planner, brand-guidelines-repo, approved-asset-library, editorial-queue]
+  out_of_scope_systems: [cms-production-publish, ad-platform-billing, crm-admin]
+  data_domains: [campaign-brief, approved-proof-point, launch-asset]
+  success_criteria:
+    - draft packets include a usable first draft for each requested channel
+    - every factual statement links back to an approved internal source
+    - editorial review starts with a complete checklist and named source references
+  confidence_thresholds:
+    - name: content-assembly
+      minimum: 0.84
+      action_below: request-human-review
+authority:
+  permission_level: supervised-content-production
+  allowed_actions:
+    - prepare-editorial-bundle
+    - stage-editorial-workspace
+    - attach-approved-source-notes
+    - open-editorial-review-task
+  restricted_actions:
+    - publish-content
+    - approve-legal-claims
+    - commit-ad-spend
+    - contact-customers-from-unapproved-lists
+  approval_requirements:
+    - action: submit-for-publication
+      requirement: editor-approval
+      approver_role: senior-copy-editor
+    - action: reuse-customer-story
+      requirement: approved-case-study-reference-required
+      approver_role: content-strategy-manager
+  system_permissions:
+    campaign-planner: [brief.read, brief.comment]
+    approved-asset-library: [asset.read, asset.reference]
+    editorial-queue: [draft.create, review.request]
+  external_communication_policy: none
+  max_transaction_value: 0
+escalation:
+  default_action: request-human-review
+  contact_path:
+    primary: content-ops-editorial-lead
+    secondary: marketing-legal-review
+  pause_on_trigger: true
+  severity_levels: [medium, high]
+  response_slos:
+    high: PT30M
+    medium: PT4H
+  notification_channels: [editorial-slack, marketing-legal-email]
+  triggers:
+    - condition: unverified legal, medical, or financial claim detected
+      action: escalate-to-human
+      target: marketing-legal-review
+      severity: high
+    - condition: confidence below 0.84 on content assembly
+      action: request-human-review
+      target: senior-copy-editor
+      severity: medium
+audit:
+  level: standard
+  required_events: [input-received, policy-evaluated, action-proposed, output-issued]
+  retention_period_days: 180
+  redaction_policy: redact-confidential-campaign-details-until-launch
+  correlation_id_strategy: campaign-id-and-draft-id
+  log_prompt_inputs: true
+  log_tool_calls: false
+  log_policy_references: true
+  storage_classification: confidential-marketing
+memory:
+  mode: session-only
+  categories: [campaign-brief-context, approved-brand-preferences, active-draft-plan]
+  retention:
+    default_days: 0
+  prohibited_content: [embargoed-financial-results, raw-customer-pii, unpublished-mna-information]
+  review_required_for_write: true
+  reset_conditions: [session-end]
+  subject_access_process: marketing-ops-request
+  encryption_class: managed-service-encrypted
+budget:
+  exhaustion_action: throttle
+  priority_tier: planned-work
+  cost_center: marketing-operations
+  limits:
+    - name: monthly-usd
+      amount: 1800
+      unit: usd
+      period: P1M
+      enforcement: hard
+    - name: draft-packets-per-day
+      amount: 80
+      unit: count
+      period: P1D
+      enforcement: soft
+performance:
+  objectives:
+    - metric: editor-acceptance-rate-with-minor-edits
+      target: ">=0.78"
+      window: P30D
+    - metric: unsupported-claim-incidents
+      target: "=0"
+      window: P30D
+  review_cycle_days: 14
+  failure_action: tighten-source-requirements-and-route-more-drafts-to-editorial-review
+  measurement_sources: [editorial-review-log, campaign-qa-sheet, source-attribution-audit]
+  minimum_sample_size: 40
+  human_review_rate: 0.35

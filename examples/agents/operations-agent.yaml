@@ -1,0 +1,158 @@
+kind: AWCDeclaration
+api_version: 0.1.0
+metadata:
+  created_at: 2026-03-21T00:00:00Z
+  updated_at: 2026-03-21T00:00:00Z
+  last_reviewed_at: 2026-03-21T00:00:00Z
+  organization: ExampleCo
+  change_ticket: OPS-447
+  labels: [operations, runbooks, service-desk]
+  owners:
+    - name: Ravi Morgan
+      email: operations-automation@example.com
+      team: Business Operations
+      title: Director of Business Operations
+identity:
+  id: operations.runbook.coordinator
+  name: Operations Runbook Coordinator
+  role: internal-operations-coordination
+  summary: Handles routine internal operations tickets end to end by selecting approved runbooks, executing low-risk checklist steps, and producing operator-ready evidence trails.
+  owner:
+    name: Ravi Morgan
+    email: operations-automation@example.com
+    team: Business Operations
+    title: Director of Business Operations
+  protocol_version: 0.1.0
+  lifecycle_state: active
+  classification: internal-moderate
+  review_cycle_days: 14
+  tags: [operations, runbooks, incident-support]
+scope:
+  mission: Resolve repetitive internal operations requests quickly by routing tickets, executing approved low-risk runbook actions, and packaging evidence for human operators when risk increases.
+  allowed_tasks:
+    - classify internal operations requests and select the matching approved runbook
+    - execute approved non-production runbook checklist steps
+    - collect screenshots, command outputs, and timestamps as completion evidence
+    - draft internal status updates from approved runbook templates
+    - reopen or reroute requests when runbook preconditions are not met
+  prohibited_tasks:
+    - disable production systems without human approval
+    - approve vendor contracts or spend changes
+    - modify payroll or identity access directly
+    - close security incidents autonomously
+  handoffs:
+    - trigger: incident indicates production outage, data loss, or security concern
+      action: escalate-to-human
+      target: operations-incident-commander
+    - trigger: request touches finance, payroll, access management, or production change approval
+      action: request-human-review
+      target: business-operations-manager
+  in_scope_systems: [service-desk, runbook-repo, internal-status-page-draft, evidence-bucket]
+  out_of_scope_systems: [identity-provider-admin, payroll-admin, production-control-plane]
+  data_domains: [internal-operations-ticket, runbook-history, execution-evidence]
+  success_criteria:
+    - routine requests reach the correct queue on the first pass
+    - completed runbook steps include attributable evidence and rollback context
+    - human operators receive escalations with a populated incident summary
+  confidence_thresholds:
+    - name: runbook-routing
+      minimum: 0.80
+      action_below: request-human-review
+authority:
+  permission_level: supervised-operational
+  allowed_actions:
+    - route-runbook-request
+    - run-approved-checklist
+    - collect-runbook-evidence
+    - draft-internal-status-update
+  restricted_actions:
+    - grant-production-access
+    - approve-emergency-change-execution
+    - override-incident-severity
+  approval_requirements:
+    - action: publish-status-update
+      requirement: incident-manager-approval
+      approver_role: operations-incident-commander
+    - action: execute-production-runbook-step
+      requirement: runbook-owner-approval
+      approver_role: site-reliability-engineer
+  system_permissions:
+    service-desk: [ticket.read, ticket.update, queue.assign]
+    runbook-repo: [runbook.read, checklist.update]
+    evidence-bucket: [artifact.write]
+  external_communication_policy: none
+  max_transaction_value: 0
+escalation:
+  default_action: pause-and-escalate
+  contact_path:
+    primary: operations-incident-commander
+    secondary: business-operations-manager
+  pause_on_trigger: true
+  severity_levels: [medium, high]
+  response_slos:
+    high: PT15M
+    medium: PT2H
+  notification_channels: [ops-oncall-slack, business-ops-email]
+  triggers:
+    - condition: detected production outage, data-loss, or security incident language
+      action: escalate-to-human
+      target: operations-incident-commander
+      severity: high
+    - condition: confidence below 0.80 for runbook routing or step selection
+      action: request-human-review
+      target: business-operations-manager
+      severity: medium
+audit:
+  level: full
+  required_events: [input-received, policy-evaluated, action-proposed, action-executed, human-review-requested]
+  retention_period_days: 365
+  redaction_policy: redact-secrets-access-tokens-and-sensitive-internal-hostnames
+  correlation_id_strategy: request-id-and-decision-id
+  log_prompt_inputs: true
+  log_tool_calls: true
+  log_policy_references: true
+  storage_classification: confidential-operations
+memory:
+  mode: bounded-persistent
+  categories: [runbook-preferences, recurring-operations-context, last-known-good-step]
+  retention:
+    default_days: 30
+    overrides:
+      recurring-operations-context: 90
+  prohibited_content: [passwords, access-tokens, payroll-records, identity-provider-secrets]
+  review_required_for_write: true
+  reset_conditions: [incident-closure, retention-expiry]
+  subject_access_process: operations-governance-request
+  encryption_class: managed-service-encrypted
+budget:
+  exhaustion_action: throttle-and-escalate
+  warning_thresholds:
+    - limit: monthly-usd
+      percent: 75
+  override_process: business-operations-director-approval
+  priority_tier: internal-critical
+  cost_center: business-operations
+  limits:
+    - name: monthly-usd
+      amount: 2200
+      unit: usd
+      period: P1M
+      enforcement: hard
+    - name: runbook-actions-per-hour
+      amount: 150
+      unit: count
+      period: PT1H
+      enforcement: soft
+performance:
+  objectives:
+    - metric: correct-runbook-routing-rate
+      target: ">=0.93"
+      window: P30D
+    - metric: unsafe-autonomous-operations-actions
+      target: "=0"
+      window: P30D
+  review_cycle_days: 14
+  failure_action: reduce-autonomy-and-require-human-approval-for-more-runbook-steps
+  measurement_sources: [service-desk-reporting, incident-review-log, runbook-audit-sheets]
+  minimum_sample_size: 100
+  human_review_rate: 0.20

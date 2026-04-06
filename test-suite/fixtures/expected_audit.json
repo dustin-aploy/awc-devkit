@@ -1,0 +1,13 @@
+{
+  "required_fields": [
+    "event_id",
+    "event_type",
+    "timestamp",
+    "agent_id",
+    "protocol_version",
+    "decision_id",
+    "outcome",
+    "action",
+    "policy_references"
+  ]
+}

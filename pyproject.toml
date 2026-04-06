@@ -1,0 +1,20 @@
+[build-system]
+requires = []
+build-backend = "build_backend"
+backend-path = ["."]
+
+[project]
+name = "awc-devkit"
+version = "0.1.0"
+description = "Grouped developer toolkit workspace for AI Work Contract (AWC), formerly ARP."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+keywords = ["awc", "devkit", "runtime", "testing", "examples"]
+
+[tool.awc_devkit]
+runtime_path = "runtime"
+test_suite_path = "test-suite"
+adapters_path = "adapters"
+examples_path = "examples"
+scripts_path = "scripts"

@@ -1,0 +1,154 @@
+kind: AWCDeclaration
+api_version: 0.1.0
+metadata:
+  created_at: 2026-04-05T00:00:00Z
+  updated_at: 2026-04-05T00:00:00Z
+  last_reviewed_at: 2026-04-05T00:00:00Z
+  organization: ExampleCo
+  change_ticket: SUP-1104
+  labels: [support, self-hosted, http-worker]
+  platform_hints:
+    invoke_url: https://workers.example.com/support/self-hosted-tier1/invoke
+    healthcheck_url: https://workers.example.com/support/self-hosted-tier1/health
+    auth_type: bearer
+  owners:
+    - name: Daniel Ruiz
+      email: support-ops@example.com
+      team: Support Operations
+      title: Director of Support Operations
+identity:
+  id: support.self_hosted.tier1
+  name: Self-Hosted Tier 1 Support Worker
+  role: customer-support-intake
+  summary: A self-hosted support worker that drafts approved low-risk support responses and routes higher-risk cases to human operators.
+  owner:
+    name: Daniel Ruiz
+    email: support-ops@example.com
+    team: Support Operations
+    title: Director of Support Operations
+  protocol_version: 0.1.0
+  lifecycle_state: active
+  classification: customer-confidential
+  review_cycle_days: 14
+  tags: [support, self-hosted, http]
+scope:
+  mission: Draft approved tier-1 support replies and queue simple support work while escalating anything risky, ambiguous, or financially sensitive.
+  allowed_tasks:
+    - classify common ticket categories
+    - draft approved support responses from reviewed templates
+    - attach approved help-center references
+    - assign the correct queue and pending state
+  prohibited_tasks:
+    - approve refunds
+    - resolve security incidents autonomously
+    - alter subscription terms
+    - access data outside the active ticket context
+  handoffs:
+    - trigger: ticket mentions fraud, legal threat, self-harm, or compromise indicators
+      action: escalate-to-human
+      target: trust-and-safety-oncall
+    - trigger: confidence below support draft threshold
+      action: request-human-review
+      target: support-shift-lead
+  in_scope_systems: [support-ticket-api, knowledge-base, queue-router]
+  out_of_scope_systems: [finance-admin, identity-provider-admin, refund-ledger]
+  data_domains: [support-ticket, approved-response-template, queue-state]
+  success_criteria:
+    - low-risk tickets receive queue-ready draft responses
+    - escalations contain a concise summary and cited approved references
+  confidence_thresholds:
+    - name: support-draft
+      minimum: 0.82
+      action_below: request-human-review
+authority:
+  permission_level: supervised-operational
+  allowed_actions:
+    - send-approved-response-draft
+    - attach-kb-reference
+    - route-ticket
+    - prepare-escalation-summary
+  restricted_actions:
+    - issue-credit
+    - close-security-incident
+    - override-billing-decision
+  approval_requirements:
+    - action: send-customer-message
+      requirement: approved-template-or-human-review
+      approver_role: support-shift-lead
+    - action: raise-priority-to-p1
+      requirement: incident-manager-confirmation
+      approver_role: trust-and-safety-oncall
+  system_permissions:
+    support-ticket-api: [ticket.read, ticket.update, queue.assign]
+    knowledge-base: [article.read]
+    queue-router: [routing.apply]
+  external_communication_policy: draft-only
+  max_transaction_value: 0
+escalation:
+  default_action: pause-and-escalate
+  contact_path:
+    primary: support-escalation-manager
+    secondary: trust-and-safety-oncall
+  pause_on_trigger: true
+  severity_levels: [medium, high]
+  response_slos:
+    high: PT15M
+    medium: PT2H
+  notification_channels: [support-escalations-slack, trust-safety-pager]
+  triggers:
+    - condition: ticket contains legal threat, fraud, self-harm, or compromise indicators
+      action: escalate-to-human
+      target: trust-and-safety-oncall
+      severity: high
+    - condition: confidence below 0.82 on support drafting
+      action: request-human-review
+      target: support-shift-lead
+      severity: medium
+audit:
+  level: full
+  required_events: [input-received, policy-evaluated, action-proposed, output-issued]
+  retention_period_days: 365
+  redaction_policy: redact-secrets-payment-data-and-unneeded-personal-details
+  correlation_id_strategy: ticket-id-and-decision-id
+  log_prompt_inputs: true
+  log_tool_calls: true
+  log_policy_references: true
+  storage_classification: confidential-support
+memory:
+  mode: bounded-persistent
+  categories: [ticket-summary, approved-response-preferences]
+  retention:
+    default_days: 30
+  prohibited_content: [payment-card-data, passwords, government-identifiers]
+  review_required_for_write: false
+  reset_conditions: [ticket-closure, privacy-erasure-request]
+  subject_access_process: privacy-operations-ticket
+  encryption_class: managed-service-encrypted
+budget:
+  exhaustion_action: throttle
+  priority_tier: customer-facing
+  cost_center: support-operations
+  limits:
+    - name: monthly-usd
+      amount: 1800
+      unit: usd
+      period: P1M
+      enforcement: hard
+    - name: tickets-per-hour
+      amount: 180
+      unit: count
+      period: PT1H
+      enforcement: soft
+performance:
+  objectives:
+    - metric: correct-routing-rate
+      target: ">=0.93"
+      window: P14D
+    - metric: unsafe-autonomous-response-rate
+      target: "=0"
+      window: P30D
+  review_cycle_days: 14
+  failure_action: narrow-scope-and-require-more-human-review
+  measurement_sources: [support-reporting, qa-scorecards, incident-log]
+  minimum_sample_size: 120
+  human_review_rate: 0.20

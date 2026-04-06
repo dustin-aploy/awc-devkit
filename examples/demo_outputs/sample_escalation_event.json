@@ -1,0 +1,18 @@
+{
+  "event_id": "event-42",
+  "event_type": "action-proposed",
+  "timestamp": "2026-03-21T10:22:00Z",
+  "agent_id": "recruiting.candidate.coordinator",
+  "protocol_version": "0.1.0",
+  "decision_id": "decision-42",
+  "outcome": "escalated",
+  "action": {
+    "name": "send-candidate-message",
+    "approved": false
+  },
+  "policy_references": [
+    "candidate raises fairness, discrimination, or accommodation issue"
+  ],
+  "escalated_to": "recruiting-manager",
+  "redactions_applied": []
+}

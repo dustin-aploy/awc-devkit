@@ -1,0 +1,32 @@
+{
+  "kind": "AWCReport",
+  "report_id": "daily-operations.runbook.coordinator",
+  "report_type": "operational",
+  "generated_at": "2026-03-21T10:15:00Z",
+  "agent_id": "operations.runbook.coordinator",
+  "protocol_version": "0.1.0",
+  "period": {
+    "start": "2026-03-21T00:00:00Z",
+    "end": "2026-03-21T23:59:59Z"
+  },
+  "summary": {
+    "status": "warning",
+    "highlights": [
+      "processed 14 decisions",
+      "escalations: 3"
+    ],
+    "risks": [
+      "blocked decisions present"
+    ]
+  },
+  "metrics": [
+    {"name": "total_decisions", "value": 14, "status": "met"},
+    {"name": "completed", "value": 9, "status": "met"},
+    {"name": "blocked", "value": 2, "status": "missed"},
+    {"name": "escalated", "value": 3, "status": "met"}
+  ],
+  "events": [],
+  "recommended_actions": [
+    "review escalation reasons"
+  ]
+}

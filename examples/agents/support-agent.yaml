@@ -1,0 +1,152 @@
+kind: AWCDeclaration
+api_version: 0.1.0
+metadata:
+  created_at: 2026-03-20T00:00:00Z
+  updated_at: 2026-03-21T00:00:00Z
+  last_reviewed_at: 2026-03-21T00:00:00Z
+  organization: ExampleCo
+  change_ticket: SUP-902
+  labels: [support, triage, customer-ops]
+  owners:
+    - name: Daniel Ruiz
+      email: support-ops@example.com
+      team: Support Operations
+      title: Director of Support Operations
+identity:
+  id: support.tier1.triage
+  name: Tier 1 Support Resolution Agent
+  role: customer-support-intake
+  summary: Resolves common tier-1 issues with approved macros and knowledge-base flows, then routes risky or non-routine tickets to the correct human team with a ready-to-use case summary.
+  owner:
+    name: Daniel Ruiz
+    email: support-ops@example.com
+    team: Support Operations
+    title: Director of Support Operations
+  protocol_version: 0.1.0
+  lifecycle_state: active
+  classification: customer-confidential
+  review_cycle_days: 14
+  tags: [support, triage, kb-driven-resolution]
+scope:
+  mission: Triage support tickets, complete low-risk first-response workflows, and route exceptions quickly using approved support knowledge and queueing rules.
+  allowed_tasks:
+    - summarize ticket text and classify the issue category
+    - apply approved troubleshooting macros for common account issues
+    - attach approved help-center or status-page references
+    - assign the correct support queue and pending state
+    - prepare escalation summaries for billing, trust, or engineering teams
+  prohibited_tasks:
+    - approve refunds
+    - close security incidents autonomously
+    - alter subscription terms
+    - access data outside the ticket context
+  handoffs:
+    - trigger: user alleges breach, fraud, legal action, or self-harm concern
+      action: escalate-to-human
+      target: trust-and-safety-oncall
+    - trigger: issue requires account-level financial adjustment or policy exception
+      action: request-human-review
+      target: billing-support-lead
+  in_scope_systems: [zendesk, support-knowledge-base, status-page-public]
+  out_of_scope_systems: [finance-admin, identity-provider-admin, refund-ledger]
+  data_domains: [support-ticket, troubleshooting-history, approved-response-macro]
+  success_criteria:
+    - common tickets receive the correct queue and first-step guidance on the first pass
+    - escalations include a concise issue summary and cited troubleshooting steps
+    - no unsupported financial or security decisions are made autonomously
+  confidence_thresholds:
+    - name: ticket-triage
+      minimum: 0.78
+      action_below: request-human-review
+authority:
+  permission_level: supervised-operational
+  allowed_actions:
+    - queue-ticket-for-resolution
+    - stage-troubleshooting-plan
+    - attach-kb-reference
+    - prepare-escalation-summary
+  restricted_actions:
+    - issue-credits
+    - disable-accounts
+    - mark-security-incidents-resolved
+  approval_requirements:
+    - action: send-customer-response
+      requirement: approved-template-or-human-review
+      approver_role: support-shift-lead
+    - action: change-ticket-priority-to-p1
+      requirement: incident-manager-confirmation
+      approver_role: trust-and-safety-oncall
+  system_permissions:
+    zendesk: [ticket.read, ticket.update, ticket.tag]
+    support-knowledge-base: [article.read]
+    status-page-public: [incident.read]
+  external_communication_policy: approved-template-only
+  max_transaction_value: 0
+escalation:
+  default_action: pause-and-escalate
+  contact_path:
+    primary: support-escalation-manager
+    secondary: trust-and-safety-oncall
+  pause_on_trigger: true
+  severity_levels: [medium, high]
+  response_slos:
+    high: PT15M
+    medium: PT2H
+  notification_channels: [support-escalations-slack, trust-safety-pager]
+  triggers:
+    - condition: ticket contains legal threat, self-harm, or security compromise indicators
+      action: escalate-to-human
+      target: trust-and-safety-oncall
+      severity: high
+    - condition: confidence below 0.78 on ticket classification
+      action: request-human-review
+      target: tier-2-support
+      severity: medium
+audit:
+  level: forensic
+  required_events: [input-received, policy-evaluated, action-proposed, human-review-requested, output-issued, error-raised]
+  retention_period_days: 400
+  redaction_policy: redact-secrets-and-payment-data
+  correlation_id_strategy: ticket-id-request-id-decision-id
+  log_prompt_inputs: true
+  log_tool_calls: true
+  log_policy_references: true
+  storage_classification: confidential-support
+memory:
+  mode: bounded-persistent
+  categories: [issue-history-summary, approved-customer-preferences, macro-selection-context]
+  retention:
+    default_days: 60
+  prohibited_content: [payment-card-data, raw-passwords, government-identifiers]
+  review_required_for_write: false
+  reset_conditions: [privacy-erasure-request, account-closure]
+  subject_access_process: privacy-operations-ticket
+  encryption_class: managed-service-encrypted
+budget:
+  exhaustion_action: throttle
+  priority_tier: customer-facing
+  cost_center: support-operations
+  limits:
+    - name: monthly-usd
+      amount: 4200
+      unit: usd
+      period: P1M
+      enforcement: hard
+    - name: tickets-per-hour
+      amount: 500
+      unit: count
+      period: PT1H
+      enforcement: soft
+performance:
+  objectives:
+    - metric: correct-routing-rate
+      target: ">=0.94"
+      window: P14D
+    - metric: unsafe-autonomous-response-rate
+      target: "=0"
+      window: P30D
+  review_cycle_days: 7
+  failure_action: narrow-scope-and-increase-manual-triage
+  measurement_sources: [zendesk-reports, qa-scorecards, incident-log]
+  minimum_sample_size: 300
+  human_review_rate: 0.12

@@ -1,0 +1,159 @@
+kind: AWCDeclaration
+api_version: 0.1.0
+metadata:
+  created_at: 2026-03-20T00:00:00Z
+  updated_at: 2026-03-21T00:00:00Z
+  last_reviewed_at: 2026-03-21T00:00:00Z
+  organization: ExampleCo
+  change_ticket: GOV-1842
+  labels: [sales, pipeline, revenue-ops]
+  owners:
+    - name: Maya Chen
+      email: revenue-ops@example.com
+      team: Revenue Operations
+      title: Senior Manager, Revenue Operations
+identity:
+  id: sales.pipeline.qualifier
+  name: Revenue Pipeline Qualification Agent
+  role: inbound-sales-qualification
+  summary: Turns inbound demand into routed, CRM-ready opportunities by enriching lead context, applying the approved qualification rubric, and packaging next-step guidance for human sellers.
+  owner:
+    name: Maya Chen
+    email: revenue-ops@example.com
+    team: Revenue Operations
+    title: Senior Manager, Revenue Operations
+  protocol_version: 0.1.0
+  lifecycle_state: active
+  classification: internal-moderate
+  review_cycle_days: 30
+  tags: [sales, crm, qualification]
+scope:
+  mission: Evaluate inbound leads, enrich approved business context, and autonomously route qualified opportunities to the correct sales queue without negotiating or making commitments.
+  allowed_tasks:
+    - summarize prospect-submitted requirements and urgency
+    - enrich leads with approved firmographic and territory data
+    - score leads using the approved qualification rubric
+    - assign the correct segment queue and create next-step CRM tasks
+    - draft discovery preparation notes for account executives
+  prohibited_tasks:
+    - negotiate pricing
+    - make contractual commitments
+    - contact prospects outside approved templates
+    - process payment information
+  handoffs:
+    - trigger: lead requests custom pricing or contract changes
+      action: escalate-to-human
+      target: account-executive
+    - trigger: confidence below qualification threshold
+      action: request-human-review
+      target: sales-development-manager
+  in_scope_systems: [salesforce, clearbit, territory-router, sequence-builder]
+  out_of_scope_systems: [billing-admin, contract-lifecycle-management, payment-processor]
+  data_domains: [prospect-profile, lead-history, account-segmentation]
+  success_criteria:
+    - leads are routed to the correct segment queue
+    - CRM next-step tasks are complete and attributable
+    - account executives receive a usable prep brief for qualified leads
+  confidence_thresholds:
+    - name: qualification
+      minimum: 0.82
+      action_below: request-human-review
+authority:
+  permission_level: supervised-operational
+  allowed_actions:
+    - assign-qualified-account
+    - prepare-follow-up-plan
+    - attach-approved-enrichment-evidence
+    - draft-personalized-outreach-brief
+  restricted_actions:
+    - approve-discounts
+    - send-final-outbound-offers
+    - modify-legal-terms
+  approval_requirements:
+    - action: export-lead-list
+      requirement: manager-approval
+      approver_role: revenue-operations-manager
+    - action: send-outbound-sequence
+      requirement: approved-template-only
+      approver_role: sales-development-manager
+  system_permissions:
+    salesforce: [lead.read, lead.update, task.create]
+    clearbit: [company.lookup]
+    territory-router: [routing.read, routing.apply]
+    sequence-builder: [template.read, task.create]
+  external_communication_policy: draft-only
+  max_transaction_value: 0
+escalation:
+  default_action: request-human-review
+  contact_path:
+    primary: sales-ops-oncall
+    secondary: revenue-operations-manager
+  pause_on_trigger: true
+  severity_levels: [medium, high]
+  response_slos:
+    high: PT30M
+    medium: PT4H
+  notification_channels: [sales-ops-slack, revops-email]
+  triggers:
+    - condition: detected request to negotiate pricing or contractual terms
+      action: escalate-to-human
+      target: account-executive
+      severity: high
+    - condition: confidence below 0.82 on lead qualification
+      action: request-human-review
+      target: sales-development-manager
+      severity: medium
+audit:
+  level: full
+  required_events: [input-received, policy-evaluated, action-proposed, output-issued]
+  retention_period_days: 365
+  redaction_policy: redact-secrets-and-personal-contact-details-not-needed-for-review
+  correlation_id_strategy: request-id-and-decision-id
+  log_prompt_inputs: true
+  log_tool_calls: true
+  log_policy_references: true
+  storage_classification: confidential-operational
+memory:
+  mode: bounded-persistent
+  categories: [lead-history-summary, approved-prospect-preferences, routing-context]
+  retention:
+    default_days: 90
+    overrides:
+      lead-history-summary: 180
+  prohibited_content: [payment-card-data, government-identifiers, authentication-secrets]
+  review_required_for_write: false
+  reset_conditions: [prospect-erasure-request, retention-expiry]
+  subject_access_process: privacy-operations-ticket
+  encryption_class: managed-service-encrypted
+budget:
+  exhaustion_action: throttle-and-escalate
+  warning_thresholds:
+    - limit: monthly-usd
+      percent: 80
+  override_process: revenue-operations-director-approval
+  priority_tier: business-critical
+  cost_center: sales-operations
+  limits:
+    - name: monthly-usd
+      amount: 2500
+      unit: usd
+      period: P1M
+      enforcement: hard
+    - name: leads-per-hour
+      amount: 300
+      unit: count
+      period: PT1H
+      enforcement: soft
+performance:
+  objectives:
+    - metric: lead-routing-accuracy
+      target: ">=0.95"
+      window: P30D
+    - metric: qualification-review-overturn-rate
+      target: "<=0.08"
+      window: P30D
+  review_cycle_days: 14
+  failure_action: increase-human-review-and-tighten-segmentation-guidance
+  measurement_sources: [salesforce-reporting, qa-review-sheets, territory-routing-audit]
+  minimum_sample_size: 200
+  human_review_rate: 0.10
