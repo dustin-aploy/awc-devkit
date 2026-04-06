@@ -40,6 +40,10 @@ python ./scripts/validate_self_hosted_onboarding.py \
 ./scripts/smoke_test.sh
 ```
 
+## License
+
+`awc-devkit` is released under the Apache License 2.0. It is intended to be an open developer toolkit, and Apache-2.0 is used to support broad adoption while providing explicit patent protection for implementers and adopters.
+
 ## Examples
 
 - agent contracts: `examples/agents/`
@@ -61,3 +65,4 @@ Use the tools in this order:
 - `docs/run-a-self-hosted-worker.md`
 - `docs/validate-a-worker.md`
 - `examples/README.md`
+- `LICENSE`

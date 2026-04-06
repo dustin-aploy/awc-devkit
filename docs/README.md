@@ -2,6 +2,8 @@
 
 This folder contains the main onboarding and workflow guides for `awc-devkit`.
 
+`awc-devkit` is intended to be an open developer toolkit. The repository uses the Apache License 2.0 to support broad adoption while providing explicit patent protection.
+
 Start here:
 
 - `self-hosted-onboarding.md` for the end-to-end local setup path
